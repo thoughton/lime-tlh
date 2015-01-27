@@ -4,7 +4,10 @@ package lime._backend.flash;
 import flash.events.Event;
 import flash.events.KeyboardEvent;
 import flash.events.MouseEvent;
+import flash.events.TextEvent;
 import flash.events.TouchEvent;
+import flash.text.TextField;
+import flash.text.TextFieldType;
 import flash.ui.MultitouchInputMode;
 import flash.ui.Multitouch;
 import flash.Lib;
@@ -15,6 +18,7 @@ import lime.graphics.Renderer;
 import lime.ui.KeyCode;
 import lime.ui.KeyEventManager;
 import lime.ui.MouseEventManager;
+import lime.ui.TextEventManager;
 import lime.ui.TouchEventManager;
 import lime.ui.Window;
 
@@ -26,6 +30,7 @@ class FlashApplication {
 	
 	
 	private static var registeredEvents:Bool;
+	private static var textInputField:TextField;
 	
 	private var parent:Application;
 	
@@ -44,6 +49,12 @@ class FlashApplication {
 			
 			Lib.current.stage.addEventListener (KeyboardEvent.KEY_DOWN, handleKeyEvent);
 			Lib.current.stage.addEventListener (KeyboardEvent.KEY_UP, handleKeyEvent);
+
+			textInputField = new TextField ();
+			textInputField.visible = false;
+			textInputField.type = TextFieldType.INPUT;
+			Lib.current.stage.addChild (textInputField);
+			textInputField.addEventListener (TextEvent.TEXT_INPUT, handleTextEvent);
 			
 			var events = [ "mouseDown", "mouseMove", "mouseUp", "mouseWheel", "middleMouseDown", "middleMouseMove", "middleMouseUp" #if ((!openfl && !disable_flash_right_click) || enable_flash_right_click) , "rightMouseDown", "rightMouseMove", "rightMouseUp" #end ];
 			
@@ -137,6 +148,8 @@ class FlashApplication {
 		MouseEventManager.onMouseMove.add (parent.onMouseMove);
 		MouseEventManager.onMouseUp.add (parent.onMouseUp);
 		MouseEventManager.onMouseWheel.add (parent.onMouseWheel);
+
+		TextEventManager.onTextInput.add (parent.onTextInput);
 		
 		TouchEventManager.onTouchStart.add (parent.onTouchStart);
 		TouchEventManager.onTouchMove.add (parent.onTouchMove);
@@ -189,10 +202,17 @@ class FlashApplication {
 		}
 		
 	}
+
+
+	private static function handleTextEvent (event:TextEvent):Void {
+
+		TextEventManager.onTextInput.dispatch (event.text);
+
+	}
 	
 	
 	private static function handleMouseEvent (event:MouseEvent):Void {
-		
+
 		var button = switch (event.type) {
 			
 			case "middleMouseDown", "middleMouseMove", "middleMouseUp": 1;
@@ -254,6 +274,8 @@ class FlashApplication {
 	private static function handleUpdateEvent (event:Event):Void {
 		
 		// TODO: deltaTime
+
+		Lib.current.stage.focus = textInputField;
 		
 		Application.__instance.update (16);
 		Application.onUpdate.dispatch (16);
