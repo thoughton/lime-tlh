@@ -2,6 +2,7 @@ package lime._backend.html5;
 
 
 import js.html.KeyboardEvent;
+import js.html.TextEvent;
 import js.Browser;
 import lime.app.Application;
 import lime.app.Config;
@@ -10,6 +11,7 @@ import lime.graphics.Renderer;
 import lime.ui.KeyCode;
 import lime.ui.KeyEventManager;
 import lime.ui.MouseEventManager;
+import lime.ui.TextEventManager;
 import lime.ui.TouchEventManager;
 import lime.ui.Window;
 
@@ -84,6 +86,7 @@ class HTML5Application {
 		
 		Browser.window.addEventListener ("keydown", handleKeyEvent, false);
 		Browser.window.addEventListener ("keyup", handleKeyEvent, false);
+		Browser.window.addEventListener ("keypress", handleTextEvent, false);
 		
 		KeyEventManager.onKeyDown.add (parent.onKeyDown);
 		KeyEventManager.onKeyUp.add (parent.onKeyUp);
@@ -92,6 +95,8 @@ class HTML5Application {
 		MouseEventManager.onMouseMove.add (parent.onMouseMove);
 		MouseEventManager.onMouseUp.add (parent.onMouseUp);
 		MouseEventManager.onMouseWheel.add (parent.onMouseWheel);
+
+		TextEventManager.onTextInput.add (parent.onTextInput);
 		
 		TouchEventManager.onTouchStart.add (parent.onTouchStart);
 		TouchEventManager.onTouchMove.add (parent.onTouchMove);
@@ -179,6 +184,13 @@ class HTML5Application {
 			
 		}
 		
+	}
+
+
+	private function handleTextEvent (event:TextEvent):Void {
+
+		TextEventManager.onTextInput.dispatch (String.fromCharCode(event.which));
+
 	}
 	
 	
