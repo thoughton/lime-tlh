@@ -8,6 +8,7 @@ import lime.graphics.Renderer;
 import lime.system.System;
 import lime.ui.KeyEventManager;
 import lime.ui.MouseEventManager;
+import lime.ui.TextEventManager;
 import lime.ui.TouchEventManager;
 import lime.ui.Window;
 
@@ -20,6 +21,7 @@ class NativeApplication {
 	
 	private static var keyEventInfo = new KeyEventInfo ();
 	private static var mouseEventInfo = new MouseEventInfo ();
+	private static var textEventInfo = new TextEventInfo ();
 	private static var registeredEvents:Bool;
 	private static var touchEventInfo = new TouchEventInfo ();
 	private static var updateEventInfo = new UpdateEventInfo ();
@@ -43,6 +45,7 @@ class NativeApplication {
 			
 			lime_key_event_manager_register (handleKeyEvent, keyEventInfo);
 			lime_mouse_event_manager_register (handleMouseEvent, mouseEventInfo);
+			lime_text_event_manager_register (handleTextEvent, textEventInfo);
 			lime_touch_event_manager_register (handleTouchEvent, touchEventInfo);
 			lime_update_event_manager_register (handleUpdateEvent, updateEventInfo);
 			
@@ -64,6 +67,8 @@ class NativeApplication {
 		MouseEventManager.onMouseMove.add (parent.onMouseMove);
 		MouseEventManager.onMouseUp.add (parent.onMouseUp);
 		MouseEventManager.onMouseWheel.add (parent.onMouseWheel);
+
+		TextEventManager.onTextInput.add (parent.onTextInput);
 		
 		TouchEventManager.onTouchStart.add (parent.onTouchStart);
 		TouchEventManager.onTouchMove.add (parent.onTouchMove);
@@ -188,6 +193,13 @@ class NativeApplication {
 		}
 		
 	}
+
+
+	private static function handleTextEvent ():Void {
+
+		TextEventManager.onTextInput.dispatch (textEventInfo.text);
+
+	}
 	
 	
 	private static function handleTouchEvent ():Void {
@@ -235,6 +247,7 @@ class NativeApplication {
 	private static var lime_application_get_ticks = System.load ("lime", "lime_application_get_ticks", 0);
 	private static var lime_key_event_manager_register = System.load ("lime", "lime_key_event_manager_register", 2);
 	private static var lime_mouse_event_manager_register = System.load ("lime", "lime_mouse_event_manager_register", 2);
+	private static var lime_text_event_manager_register = System.load ("lime", "lime_text_event_manager_register", 2);
 	private static var lime_touch_event_manager_register = System.load ("lime", "lime_touch_event_manager_register", 2);
 	private static var lime_update_event_manager_register = System.load ("lime", "lime_update_event_manager_register", 2);
 	
@@ -314,6 +327,29 @@ private class MouseEventInfo {
 	var MOUSE_MOVE = 2;
 	var MOUSE_WHEEL = 3;
 	
+}
+
+
+private class TextEventInfo {
+
+
+	public var text:String;
+
+
+	public function new (text:String = null) {
+
+		this.text = text;
+
+	}
+
+
+	public function clone ():TextEventInfo {
+
+		return new TextEventInfo (text);
+
+	}
+
+
 }
 
 

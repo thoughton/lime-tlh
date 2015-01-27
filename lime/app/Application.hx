@@ -136,6 +136,13 @@ class Application extends Module {
 	 * @param	deltaY	The amount of vertical scrolling (if applicable)
 	 */
 	public function onMouseWheel (deltaX:Float, deltaY:Float):Void { }
+
+
+	/**
+	 * Called when a text input event is fired
+	 * @param	text	The text that was entered by the user
+	 */
+	public function onTextInput (text:String):Void { }
 	
 	
 	/**
