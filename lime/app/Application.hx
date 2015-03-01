@@ -2,6 +2,9 @@ package lime.app;
 
 
 import lime.graphics.RenderContext;
+import lime.graphics.Renderer;
+import lime.ui.KeyCode;
+import lime.ui.KeyModifier;
 import lime.ui.Window;
 
 
@@ -14,27 +17,54 @@ import lime.ui.Window;
 class Application extends Module {
 	
 	
+	public static var current (default, null):Application;
+	
+	public var config (default, null):Config;
+	
 	/**
 	 * Update events are dispatched each frame (usually just before rendering)
 	 */
-	public static var onUpdate = new Event<Int->Void> ();
+	public var onUpdate = new Event<Int->Void> ();
 	
-	@:noCompletion private static var __initialized:Bool;
-	@:noCompletion private static var __instance:Application;
-	
-	public var config (default, null):Config;
+	public var renderer (get, null):Renderer;
+	public var renderers (default, null):Array<Renderer>;
 	public var window (get, null):Window;
 	public var windows (default, null):Array<Window>;
 	
-	@:noCompletion public var backend:ApplicationBackend;
+	@:noCompletion private var backend:ApplicationBackend;
 	
 	
 	public function new () {
 		
 		super ();
 		
+		if (Application.current == null) {
+			
+			Application.current = this;
+			
+		}
+		
+		renderers = new Array ();
 		windows = new Array ();
 		backend = new ApplicationBackend (this);
+		
+		onUpdate.add (update);
+		
+	}
+	
+	
+	/**
+	 * Adds a new Renderer to the Application. By default, this is
+	 * called automatically by create()
+	 * @param	renderer	A Renderer object to add
+	 */
+	public function addRenderer (renderer:Renderer):Void {
+		
+		renderer.onRender.add (render);
+		renderer.onRenderContextLost.add (onRenderContextLost);
+		renderer.onRenderContextRestored.add (onRenderContextRestored);
+		
+		renderers.push (renderer);
 		
 	}
 	
@@ -47,6 +77,24 @@ class Application extends Module {
 	public function addWindow (window:Window):Void {
 		
 		windows.push (window);
+		
+		window.onKeyDown.add (onKeyDown);
+		window.onKeyUp.add (onKeyUp);
+		window.onMouseDown.add (onMouseDown);
+		window.onMouseMove.add (onMouseMove);
+		window.onMouseUp.add (onMouseUp);
+		window.onMouseWheel.add (onMouseWheel);
+		window.onTouchStart.add (onTouchStart);
+		window.onTouchMove.add (onTouchMove);
+		window.onTouchEnd.add (onTouchEnd);
+		window.onWindowActivate.add (onWindowActivate);
+		window.onWindowClose.add (onWindowClose);
+		window.onWindowDeactivate.add (onWindowDeactivate);
+		window.onWindowFocusIn.add (onWindowFocusIn);
+		window.onWindowFocusOut.add (onWindowFocusOut);
+		window.onWindowMove.add (onWindowMove);
+		window.onWindowResize.add (onWindowResize);
+		
 		window.create (this);
 		
 	}
@@ -73,6 +121,8 @@ class Application extends Module {
 	 */
 	public function exec ():Int {
 		
+		Application.current = this;
+		
 		return backend.exec ();
 		
 	}
@@ -92,7 +142,7 @@ class Application extends Module {
 	 * @param	keyCode	The code of the key that was pressed
 	 * @param	modifier	The modifier of the key that was pressed
 	 */
-	public function onKeyDown (keyCode:Int, modifier:Int):Void { }
+	public function onKeyDown (keyCode:KeyCode, modifier:KeyModifier):Void { }
 	
 	
 	/**
@@ -100,7 +150,7 @@ class Application extends Module {
 	 * @param	keyCode	The code of the key that was released
 	 * @param	modifier	The modifier of the key that was released
 	 */
-	public function onKeyUp (keyCode:Int, modifier:Int):Void { }
+	public function onKeyUp (keyCode:KeyCode, modifier:KeyModifier):Void { }
 	
 	
 	/**
@@ -225,6 +275,21 @@ class Application extends Module {
 	
 	
 	/**
+	 * Removes a Renderer from the Application
+	 * @param	renderer	A Renderer object to add
+	 */
+	public function removeRenderer (renderer:Renderer):Void {
+		
+		if (renderer != null && renderers.indexOf (renderer) > -1) {
+			
+			renderers.remove (renderer);
+			
+		}
+		
+	}
+	
+	
+	/**
 	 * Removes a Window from the Application
 	 * @param	window	A Window object to add
 	 */
@@ -259,6 +324,13 @@ class Application extends Module {
 	// Get & Set Methods
 	
 	
+	
+	
+	@:noCompletion private inline function get_renderer ():Renderer {
+		
+		return renderers[0];
+		
+	}
 	
 	
 	@:noCompletion private inline function get_window ():Window {

@@ -1,3 +1,58 @@
+2.1.2 (02/20/2015)
+------------------
+
+* Minor fixes for upcoming Haxe 3.2 release
+* Added "lime deploy" to zip and support upload targets
+* Added initial support for Google Drive using "lime deploy"
+* Added "Options.txt" reading for iOS builds to include -Dhxcpp_api_level
+* Changed "lime update ios" to only update, and not open Xcode
+* Added "-xcode" flag to open Xcode on iOS "build" or "run" command
+* Fixed the use of "lime" from Windows batch/command files
+* Improved "haxelib path" error message when a dependency haxelib is missing
+* Improved PathHelper.relocatePath to resolve issues with absolute paths
+* Fixed issue preventing projects from changing Flash scaleMode/align
+* Improved web font loading on HTML5 target
+* Fixed JavaScript minification that was failing on some systems
+* Fix issue with disappearing keyboards on certain Android devices
+* Fix "isValid" check in GLShader to check for zero
+* Set `<config:android install-location="auto" />` by default
+* Request focus in resume on Android, in case an extension has focus (legacy)
+* Added TILE_BLEND_SUBTRACT (legacy)
+
+
+2.1.1 (02/13/2015)
+------------------
+
+* Added initial Emscripten target support
+* Fixed regression in HTML5 font asset embedding
+* Minor improvement to SWF embedding for Flash target
+
+
+2.1.0 (02/11/2015)
+------------------
+
+* Refactored, made many events instance-based, not static
+* Removed event managers, moved input events to Window class instances
+* Moved many Lime tool classes into the public lime.* API
+* Added initial Lime 2 support for Android
+* Added official Android X86 emulator support
+* Added support for munit unit testing suite
+* Added System.getTimer for faster delta time calculations
+* Added application.removeWindow and window.close
+* Added support for a custom asset root URL on HTML5
+* Added forced OpenAL cleanup, in case of an unclean exit
+* Fixed support for Haxe 3.2 haxelib behavior
+* Fixed createImageData issue on HTML5 for WebGL
+* Improvements to in-progress Lime text layout API
+* Improved handling of Android Debug Bridge on Linux
+* Improved handling of ANT_HOME for use with ADB
+* Fixed the output of textField.htmlText on Android (legacy)
+* Updated TextField implementation (legacy)
+* Fixed behavior of ColorMatrixFilter (legacy)
+* Fixed textField.setTextFormat with different font (legacy)
+* Fixed crash in Capabilities.language on iOS (legacy)
+
+
 2.0.6 (01/22/2015)
 ------------------
 
