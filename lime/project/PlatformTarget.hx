@@ -40,7 +40,7 @@ class PlatformTarget {
 		}
 		
 		//if (!Reflect.hasField (metaFields.clean, "ignore") && (command == "clean" || targetFlags.exists ("clean"))) {
-		if (!Reflect.hasField (metaFields.clean, "ignore") && (command == "clean" || (project.targetFlags.exists ("clean") && (command == "update" || command == "build" || command == "test")))) {
+		if (!Reflect.hasField (metaFields.clean, "ignore") && (command == "clean" || (project.targetFlags.exists ("clean") && (command == "update" || command == "build" || command == "codetips" || command == "test")))) {
 			
 			LogHelper.info ("", LogHelper.accentColor + "Running command: CLEAN" + LogHelper.resetColor);
 			clean ();
@@ -76,8 +76,6 @@ class PlatformTarget {
 			if (command == "codetips") {
 
 				LogHelper.info ("", "\n" + LogHelper.accentColor + "Running command: BUILD (for CODETIPS)" + LogHelper.resetColor);
-
-				helpers.LogHelper.info ("hey");
 
 				buildcodetips ();
 
