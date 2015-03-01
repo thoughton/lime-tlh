@@ -63,7 +63,7 @@ class PlatformTarget {
 			
 		}
 		
-		if (!Reflect.hasField (metaFields.update, "ignore") && (command == "update" || command == "build" || command == "test")) {
+		if (!Reflect.hasField (metaFields.update, "ignore") && (command == "update" || command == "build" || command == "codetips" || command == "test")) {
 			
 			LogHelper.info ("", "\n" + LogHelper.accentColor + "Running command: UPDATE" + LogHelper.resetColor);
 			AssetHelper.processLibraries (project, targetDirectory);
@@ -71,10 +71,23 @@ class PlatformTarget {
 			
 		}
 		
-		if (!Reflect.hasField (metaFields.build, "ignore") && (command == "build" || command == "test")) {
-			
-			LogHelper.info ("", "\n" + LogHelper.accentColor + "Running command: BUILD" + LogHelper.resetColor);
-			build ();
+		if (!Reflect.hasField (metaFields.build, "ignore") && (command == "build" || command == "codetips" || command == "test")) {
+
+			if (command == "codetips") {
+
+				LogHelper.info ("", "\n" + LogHelper.accentColor + "Running command: BUILD (for CODETIPS)" + LogHelper.resetColor);
+
+				helpers.LogHelper.info ("hey");
+
+				buildcodetips ();
+
+			} else {
+				
+				LogHelper.info ("", "\n" + LogHelper.accentColor + "Running command: BUILD" + LogHelper.resetColor);
+
+				build ();
+
+			}			
 			
 		}
 		
@@ -114,6 +127,7 @@ class PlatformTarget {
 	
 	
 	@ignore public function build ():Void {}
+	@ignore public function buildcodetips ():Void {}
 	@ignore public function clean ():Void {}
 	@ignore public function display ():Void {}
 	@ignore public function install ():Void {}

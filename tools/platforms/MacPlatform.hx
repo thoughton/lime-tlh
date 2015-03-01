@@ -106,6 +106,7 @@ class MacPlatform extends PlatformTarget {
 		if (targetType == "neko") {
 			
 			ProcessHelper.runCommand ("", "haxe", [ hxml ]);
+			//helpers.LogHelper.info("Callstack:" + haxe.CallStack.toString(haxe.CallStack.callStack()));
 			NekoHelper.createExecutable (project.templatePaths, "Mac" + (is64 ? "64" : ""), targetDirectory + "/obj/ApplicationMain.n", executablePath);
 			NekoHelper.copyLibraries (project.templatePaths, "Mac" + (is64 ? "64" : ""), executableDirectory);
 			
@@ -161,6 +162,49 @@ class MacPlatform extends PlatformTarget {
 			
 			ProcessHelper.runCommand ("", "chmod", [ "755", executablePath ]);
 			
+		}
+		
+	}
+
+
+	public override function buildcodetips ():Void {
+
+		helpers.LogHelper.info("hey2");
+		
+		var type = "release";
+		
+		if (project.debug) {
+			
+			type = "debug";
+			
+		} else if (project.targetFlags.exists ("final")) {
+			
+			type = "final";
+			
+		}
+		
+		var hxml = targetDirectory + "/haxe/" + type + ".hxml";
+		
+		PathHelper.mkdir (targetDirectory);
+		
+		if (!project.targetFlags.exists ("static") || targetType != "cpp") {
+			
+			for (ndll in project.ndlls) {
+				
+				FileHelper.copyLibrary (project, ndll, "Mac" + (is64 ? "64" : ""), "", (ndll.haxelib != null && (ndll.haxelib.name == "hxcpp" || ndll.haxelib.name == "hxlibc")) ? ".dylib" : ".ndll", executableDirectory, project.debug);
+				
+			}
+			
+		}
+		
+		if (targetType == "neko") {
+
+			// TODO! Need to get the file name and line number from command line
+			
+			ProcessHelper.runCommand("", "haxe", [ hxml, "-cp", "Source2", "--display", "Source2/Main.hx@4934" ], true, false, true);
+
+			helpers.LogHelper.info("hey3");
+			helpers.LogHelper.info("Callstack:" + haxe.CallStack.toString(haxe.CallStack.callStack()));
 		}
 		
 	}

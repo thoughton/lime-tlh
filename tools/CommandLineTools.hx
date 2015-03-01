@@ -41,6 +41,8 @@ class CommandLineTools {
 	private var userDefines:Map <String, Dynamic>;
 	private var version:String;
 	private var words:Array <String>;
+	private var codeTipsFilePath:String;
+	private var codeTipsCursorPos:String;
 	
 	
 	public function new () {
@@ -54,6 +56,8 @@ class CommandLineTools {
 		traceEnabled = true;
 		userDefines = new Map <String, Dynamic> ();
 		words = new Array <String> ();
+		codeTipsFilePath = "";
+		codeTipsCursorPos = "";
 		
 		overrides = new HXProject ();
 		overrides.architectures = [];
@@ -113,7 +117,7 @@ class CommandLineTools {
 				
 				updateLibrary ();
 			
-			case "clean", "update", "display", "build", "run", "rerun", /*"install",*/ "uninstall", "trace", "test":
+			case "clean", "update", "display", "build", "codetips", "run", "rerun", /*"install",*/ "uninstall", "trace", "test":
 				
 				if (words.length < 1 || words.length > 2) {
 					
@@ -693,6 +697,7 @@ class CommandLineTools {
 		LogHelper.println (" " + LogHelper.accentColor + "Usage:\x1b[0m \x1b[1m" + commandName + "\x1b[0m rebuild <library> (target)\x1b[3;37m,(target),...\x1b[0m");
 		LogHelper.println (" " + LogHelper.accentColor + "Usage:\x1b[0m \x1b[1m" + commandName + "\x1b[0m install|remove|upgrade <library>");
 		LogHelper.println (" " + LogHelper.accentColor + "Usage:\x1b[0m \x1b[1m" + commandName + "\x1b[0m help");
+		// TODO Add a line of help here ^^^
 		LogHelper.println ("");
 		LogHelper.println (" " + LogHelper.accentColor + "Commands:" + LogHelper.resetColor);
 		LogHelper.println ("");
@@ -703,6 +708,7 @@ class CommandLineTools {
 		LogHelper.println ("  \x1b[1mrun\x1b[0m -- Install and run for the specified project/target");
 		LogHelper.println ("  \x1b[1mtest\x1b[0m -- Update, build and run in one command");
 		LogHelper.println ("  \x1b[1mdisplay\x1b[0m -- Display information for the specified project/target");
+		LogHelper.println ("  \x1b[1mcodetips\x1b[0m -- Display code tips using compiler-based completion (neko only)");
 		LogHelper.println ("  \x1b[1mcreate\x1b[0m -- Create a new project or extension using templates");
 		LogHelper.println ("  \x1b[1mrebuild\x1b[0m -- Recompile native binaries for libraries");
 		LogHelper.println ("  \x1b[1minstall\x1b[0m -- Install a library from haxelib, plus dependencies");
@@ -732,6 +738,8 @@ class CommandLineTools {
 		LogHelper.println ("  \x1b[1m-clean\x1b[0m -- Add a \"clean\" action before running the current command");
 		LogHelper.println ("  \x1b[1m-nocolor\x1b[0m -- Disable ANSI format codes in output");
 		LogHelper.println ("  \x1b[1m-xml\x1b[0m -- Generate XML type information, useful for documentation");
+		LogHelper.println ("  \x1b[1m-tipsfile\x1b[0;3m=value\x1b[0m -- Full path (and filename) for code tip when using \"codetips\"");
+		LogHelper.println ("  \x1b[1m-tipscursor\x1b[0;3m=value\x1b[0m -- Cursor position (in bytes) for code tip when using \"codetips\"");
 		LogHelper.println ("  \x1b[1m-args\x1b[0m ... -- Add additional arguments when using \"run\" or \"test\"");
 		LogHelper.println ("  \x1b[3m(windows|mac|linux)\x1b[0m \x1b[1m-neko\x1b[0m -- Build with Neko instead of C++");
 		LogHelper.println ("  \x1b[3m(mac|linux)\x1b[0m \x1b[1m-32\x1b[0m -- Compile for 32-bit instead of the OS default");
@@ -780,7 +788,7 @@ class CommandLineTools {
 			LogHelper.println ("\x1b[37m            888                                   \x1b[0m");
 			
 			LogHelper.println ("");
-			LogHelper.println ("\x1b[1mOpenFL Command-Line Tools\x1b[0;1m (" + getVersion (new Haxelib ("openfl")) + "-L" + StringHelper.generateUUID (5, null, StringHelper.generateHashCode (version)) + ")\x1b[0m");
+			LogHelper.println ("\x1b[1mOpenFL Command-Line Tools\x1b[0;1m (" + getVersion (new Haxelib ("openfl")) + "-L" + StringHelper.generateUUID (5, null, StringHelper.generateHashCode (version)) + ")\x1b[0m [tlhwip]");
 			
 		} else {
 			
@@ -793,7 +801,7 @@ class CommandLineTools {
 			LogHelper.println ("\x1b[32m   \\/____/ \\/_/\\/_/\\/_/\\/_/\\/____/\x1b[0m");
 			
 			LogHelper.println ("");
-			LogHelper.println ("\x1b[1mLime Command-Line Tools\x1b[0;1m (" + version + ")\x1b[0m");
+			LogHelper.println ("\x1b[1mLime Command-Line Tools\x1b[0;1m (" + version + ")\x1b[0m [tlhwip]");
 			
 		}
 		
@@ -1204,6 +1212,9 @@ class CommandLineTools {
 			}
 			
 		}
+
+		// TODO Need to copy the codetips settings into the "project" (will also need to add new members to the project class and/or its base class)
+		//      Possibly also override the platform to always be neko here too if doing a "codetips" command?
 		
 		if (project == null) {
 			
@@ -1550,6 +1561,14 @@ class CommandLineTools {
 						
 					}
 					
+				} else if (argument.substr (0, equals) == "-tipsfile") {
+
+					codeTipsFilePath = argValue;
+
+				} else if (argument.substr (0, equals) == "-tipscursor") {
+
+					codeTipsCursorPos = argValue;
+
 				} else {
 					
 					userDefines.set (argument.substr (0, equals), argValue);
@@ -1637,6 +1656,9 @@ class CommandLineTools {
 				words.push (argument);
 				
 			}
+
+			LogHelper.info ("tipsfile = " + codeTipsFilePath);
+			LogHelper.info ("tipscursor = " + codeTipsCursorPos);
 			
 		}
 		
@@ -1678,7 +1700,7 @@ class CommandLineTools {
 		}
 		
 		LogHelper.info ("", LogHelper.accentColor + "Running command: " + command.toUpperCase () + LogHelper.resetColor);
-		
+
 		var name = defaultLibrary;
 		
 		if (words.length > 0) {
