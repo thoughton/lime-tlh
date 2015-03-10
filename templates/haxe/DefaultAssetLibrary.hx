@@ -6,13 +6,13 @@ import haxe.Unserializer;
 import lime.app.Preloader;
 import lime.audio.openal.AL;
 import lime.audio.AudioBuffer;
-import lime.graphics.Font;
 import lime.graphics.Image;
+import lime.text.Font;
 import lime.utils.ByteArray;
 import lime.utils.UInt8Array;
 import lime.Assets;
 
-#if (sys || nodejs)
+#if sys
 import sys.FileSystem;
 #end
 
@@ -139,11 +139,11 @@ class DefaultAssetLibrary extends AssetLibrary {
 			
 			#if flash
 			
-			if ((assetType == BINARY || assetType == TEXT) && requestedType == BINARY) {
+			if (requestedType == BINARY && (assetType == BINARY || assetType == TEXT || assetType == IMAGE)) {
 				
 				return true;
 				
-			} else if (path.exists (id)) {
+			} else if (requestedType == null || path.exists (id)) {
 				
 				return true;
 				
@@ -194,6 +194,23 @@ class DefaultAssetLibrary extends AssetLibrary {
 		
 		#if flash
 		
+		switch (type.get (id)) {
+			
+			case TEXT, BINARY:
+				
+				return cast (Type.createInstance (className.get (id), []), ByteArray);
+			
+			case IMAGE:
+				
+				var bitmapData = cast (Type.createInstance (className.get (id), []), BitmapData);
+				return bitmapData.getPixels (bitmapData.rect);
+			
+			default:
+				
+				return null;
+			
+		}
+		
 		return cast (Type.createInstance (className.get (id), []), ByteArray);
 		
 		#elseif html5
@@ -241,7 +258,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 		// TODO: Complete Lime Font API
 		
 		#if openfl
-		#if (flash || js)
+		#if (flash || html5)
 		
 		return cast (Type.createInstance (className.get (id), []), openfl.text.Font);
 		
@@ -422,26 +439,24 @@ class DefaultAssetLibrary extends AssetLibrary {
 	
 	public override function loadAudioBuffer (id:String, handler:AudioBuffer -> Void):Void {
 		
-		#if (flash || js)
-		
-		//if (path.exists (id)) {
+		#if (flash)
+		if (path.exists (id)) {
 			
-		//	var loader = new Loader ();
-		//	loader.contentLoaderInfo.addEventListener (Event.COMPLETE, function (event) {
+			var soundLoader = new Sound ();
+			soundLoader.addEventListener (Event.COMPLETE, function (event) {
 				
-		//		handler (cast (event.currentTarget.content, Bitmap).bitmapData);
+				var audioBuffer:AudioBuffer = new AudioBuffer();
+				audioBuffer.src = event.currentTarget;
+				handler (audioBuffer);
 				
-		//	});
-		//	loader.load (new URLRequest (path.get (id)));
+			});
+			soundLoader.load (new URLRequest (path.get (id)));
 			
-		//} else {
-			
+		} else {
 			handler (getAudioBuffer (id));
 			
-		//}
-		
+		}
 		#else
-		
 		handler (getAudioBuffer (id));
 		
 		#end
@@ -574,7 +589,7 @@ class DefaultAssetLibrary extends AssetLibrary {
 	
 	/*public override function loadMusic (id:String, handler:Dynamic -> Void):Void {
 		
-		#if (flash || js)
+		#if (flash || html5)
 		
 		//if (path.exists (id)) {
 			

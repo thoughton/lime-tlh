@@ -9,7 +9,11 @@ import haxe.Timer;
 #end
 
 #if (js && html5)
+#if (haxe_ver >= "3.2")
+import js.html.HTMLElement;
+#else
 import js.html.HtmlElement;
+#end
 import js.Browser;
 #end
 
@@ -40,7 +44,7 @@ class System {
 	@:keep @:expose("lime.embed")
 	public static function embed (element:Dynamic, width:Null<Int> = null, height:Null<Int> = null, background:String = null, assetsPrefix:String = null) {
 		
-		var htmlElement:HtmlElement = null;
+		var htmlElement:#if (haxe_ver >= "3.2") HTMLElement #else HtmlElement #end = null;
 		
 		if (Std.is (element, String)) {
 			
@@ -302,7 +306,7 @@ class System {
 	
 	private static function tryLoad (name:String, library:String, func:String, args:Int):Dynamic {
 		
-		#if (sys && !html5 || nodejs)
+		#if sys
 		
 		try {
 			

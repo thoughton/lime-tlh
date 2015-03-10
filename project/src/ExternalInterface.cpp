@@ -15,14 +15,13 @@
 #include <audio/AudioBuffer.h>
 #include <graphics/format/JPEG.h>
 #include <graphics/format/PNG.h>
-#include <graphics/Font.h>
-#ifdef LIME_HARFBUZZ
-#include <graphics/Text.h>
-#endif
 #include <graphics/ImageBuffer.h>
 #include <graphics/Renderer.h>
 #include <graphics/RenderEvent.h>
 #include <system/System.h>
+#include <text/Font.h>
+#include <text/GlyphSet.h>
+#include <text/TextEngine.h>
 #include <ui/KeyEvent.h>
 #include <ui/Mouse.h>
 #include <ui/MouseCursor.h>
@@ -121,13 +120,14 @@ namespace lime {
 	}
 	
 	
-	value lime_font_create_image (value fontHandle) {
+	value lime_font_create_images (value fontHandle, value fontSize, value glyphSet) {
 		
 		#ifdef LIME_FREETYPE
 		ImageBuffer image;
 		Font *font = (Font*)(intptr_t)val_float (fontHandle);
+		GlyphSet glyphs = GlyphSet (glyphSet);
 		value data = alloc_empty_object ();
-		alloc_field (data, val_id ("glyphs"), font->RenderToImage (&image));
+		alloc_field (data, val_id ("glyphs"), font->CreateImages (val_int (fontSize), &glyphs, &image));
 		alloc_field (data, val_id ("image"), image.Value ());
 		return data;
 		#else
@@ -137,11 +137,35 @@ namespace lime {
 	}
 	
 	
-	void lime_font_destroy (value fontHandle) {
+	void lime_font_destroy (value handle) {
 		
-		Font *font = (Font*)(intptr_t)val_float (fontHandle);
+		Font *font = (Font*)(intptr_t)val_float (handle);
 		delete font;
 		font = 0;
+		
+	}
+	
+	
+	value lime_font_get_ascender (value fontHandle) {
+		
+		#ifdef LIME_FREETYPE
+		Font *font = (Font*)(intptr_t)val_float (fontHandle);
+		return alloc_int (font->GetAscender ());
+		#else
+		return alloc_null ();
+		#endif
+		
+	}
+	
+	
+	value lime_font_get_descender (value fontHandle) {
+		
+		#ifdef LIME_FREETYPE
+		Font *font = (Font*)(intptr_t)val_float (fontHandle);
+		return alloc_int (font->GetDescender ());
+		#else
+		return alloc_null ();
+		#endif
 		
 	}
 	
@@ -150,7 +174,7 @@ namespace lime {
 		
 		#ifdef LIME_FREETYPE
 		Font *font = (Font*)(intptr_t)val_float (fontHandle);
-		return font->GetFamilyName ();
+		return alloc_wstring (font->GetFamilyName ());
 		#else
 		return alloc_null ();
 		#endif
@@ -158,47 +182,104 @@ namespace lime {
 	}
 	
 	
-	value lime_font_load (value fontFace) {
+	value lime_font_get_glyph_metrics (value fontHandle, value glyphSet) {
 		
 		#ifdef LIME_FREETYPE
-		Font *font = Font::FromFile (val_string (fontFace));
+		Font *font = (Font*)(intptr_t)val_float (fontHandle);
+		GlyphSet glyphs = GlyphSet (glyphSet);
+		return font->GetGlyphMetrics (&glyphs);
+		#else
+		return alloc_null ();
+		#endif
+		
+	}
+	
+	
+	value lime_font_get_height (value fontHandle) {
+		
+		#ifdef LIME_FREETYPE
+		Font *font = (Font*)(intptr_t)val_float (fontHandle);
+		return alloc_int (font->GetHeight ());
+		#else
+		return alloc_null ();
+		#endif
+		
+	}
+	
+	
+	value lime_font_get_num_glyphs (value fontHandle) {
+		
+		#ifdef LIME_FREETYPE
+		Font *font = (Font*)(intptr_t)val_float (fontHandle);
+		return alloc_int (font->GetNumGlyphs ());
+		#else
+		return alloc_null ();
+		#endif
+		
+	}
+	
+	
+	value lime_font_get_underline_position (value fontHandle) {
+		
+		#ifdef LIME_FREETYPE
+		Font *font = (Font*)(intptr_t)val_float (fontHandle);
+		return alloc_int (font->GetUnderlinePosition ());
+		#else
+		return alloc_null ();
+		#endif
+		
+	}
+	
+	
+	value lime_font_get_underline_thickness (value fontHandle) {
+		
+		#ifdef LIME_FREETYPE
+		Font *font = (Font*)(intptr_t)val_float (fontHandle);
+		return alloc_int (font->GetUnderlineThickness ());
+		#else
+		return alloc_null ();
+		#endif
+		
+	}
+	
+	
+	value lime_font_get_units_per_em (value fontHandle) {
+		
+		#ifdef LIME_FREETYPE
+		Font *font = (Font*)(intptr_t)val_float (fontHandle);
+		return alloc_int (font->GetUnitsPerEM ());
+		#else
+		return alloc_null ();
+		#endif
+		
+	}
+	
+	
+	value lime_font_load (value data) {
+		
+		#ifdef LIME_FREETYPE
+		Resource resource;
+		
+		if (val_is_string (data)) {
+			
+			resource = Resource (val_string (data));
+			
+		} else {
+			
+			ByteArray bytes (data);
+			resource = Resource (&bytes);
+			
+		}
+		
+		Font *font = new Font (&resource, 0);
+		
 		if (font) {
-
+			
 			value v = alloc_float ((intptr_t)font);
 			val_gc (v, lime_font_destroy);
 			return v;
-
-		} else {
-
-			return alloc_null ();
-
+			
 		}
-		#else
-		return alloc_null ();
-		#endif
-		
-	}
-	
-	
-	value lime_font_load_glyphs (value fontHandle, value size, value glyphs) {
-		
-		#ifdef LIME_FREETYPE
-		Font *font = (Font*)(intptr_t)val_float (fontHandle);
-		font->SetSize (val_int (size));
-		font->LoadGlyphs (val_string (glyphs));
-		#endif
-		
-		return alloc_null ();
-		
-	}
-	
-	
-	value lime_font_load_range (value fontHandle, value size, value start, value end) {
-		
-		#ifdef LIME_FREETYPE
-		Font *font = (Font*)(intptr_t)val_float (fontHandle);
-		font->SetSize (val_int (size));
-		font->LoadRange (val_int (start), val_int (end));
 		#endif
 		
 		return alloc_null ();
@@ -417,10 +498,10 @@ namespace lime {
 	}
 	
 	
-	void lime_text_destroy (value textHandle) {
+	void lime_text_engine_destroy (value textHandle) {
 		
 		#ifdef LIME_HARFBUZZ
-		Text *text = (Text*)(intptr_t)val_float (textHandle);
+		TextEngine *text = (TextEngine*)(intptr_t)val_float (textHandle);
 		delete text;
 		text = 0;
 		#endif
@@ -428,28 +509,36 @@ namespace lime {
 	}
 	
 	
-	value lime_text_create (value direction, value script, value language) {
+	value lime_text_engine_create (value direction, value script, value language) {
 		
 		#if defined(LIME_FREETYPE) && defined(LIME_HARFBUZZ)
-		Text *text = new Text (val_int (direction), val_string (script), val_string (language));
+		
+		TextEngine *text = new TextEngine (val_int (direction), val_string (script), val_string (language));
 		value v = alloc_float ((intptr_t)text);
-		val_gc (v, lime_text_destroy);
+		val_gc (v, lime_text_engine_destroy);
 		return v;
+		
 		#else
+		
 		return alloc_null ();
+		
 		#endif
 		
 	}
 	
 	
-	value lime_text_from_string (value textHandle, value fontHandle, value size, value textString) {
+	value lime_text_engine_layout (value textHandle, value fontHandle, value size, value textString) {
 		
 		#if defined(LIME_FREETYPE) && defined(LIME_HARFBUZZ)
-		Text *text = (Text*)(intptr_t)val_float (textHandle);
+		
+		TextEngine *text = (TextEngine*)(intptr_t)val_float (textHandle);
 		Font *font = (Font*)(intptr_t)val_float (fontHandle);
-		return text->FromString(font, val_int (size), val_string (textString));
+		return text->Layout (font, val_int (size), val_string (textString));
+		
 		#else
+		
 		return alloc_null ();
+		
 		#endif
 		
 	}
@@ -535,11 +624,17 @@ namespace lime {
 	DEFINE_PRIM (lime_application_quit, 1);
 	DEFINE_PRIM (lime_application_update, 1);
 	DEFINE_PRIM (lime_audio_load, 1);
-	DEFINE_PRIM (lime_font_create_image, 1);
+	DEFINE_PRIM (lime_font_create_images, 3);
+	DEFINE_PRIM (lime_font_get_ascender, 1);
+	DEFINE_PRIM (lime_font_get_descender, 1);
 	DEFINE_PRIM (lime_font_get_family_name, 1);
+	DEFINE_PRIM (lime_font_get_glyph_metrics, 2);
+	DEFINE_PRIM (lime_font_get_height, 1);
+	DEFINE_PRIM (lime_font_get_num_glyphs, 1);
+	DEFINE_PRIM (lime_font_get_underline_position, 1);
+	DEFINE_PRIM (lime_font_get_underline_thickness, 1);
+	DEFINE_PRIM (lime_font_get_units_per_em, 1);
 	DEFINE_PRIM (lime_font_load, 1);
-	DEFINE_PRIM (lime_font_load_glyphs, 3);
-	DEFINE_PRIM (lime_font_load_range, 4);
 	DEFINE_PRIM (lime_font_outline_decompose, 2);
 	DEFINE_PRIM (lime_image_encode, 3);
 	DEFINE_PRIM (lime_image_load, 1);
@@ -556,8 +651,8 @@ namespace lime {
 	DEFINE_PRIM (lime_renderer_flip, 1);
 	DEFINE_PRIM (lime_render_event_manager_register, 2);
 	DEFINE_PRIM (lime_system_gettimer, 0);
-	DEFINE_PRIM (lime_text_create, 3);
-	DEFINE_PRIM (lime_text_from_string, 4);
+	DEFINE_PRIM (lime_text_engine_create, 3);
+	DEFINE_PRIM (lime_text_engine_layout, 4);
 	DEFINE_PRIM (lime_touch_event_manager_register, 2);
 	DEFINE_PRIM (lime_update_event_manager_register, 2);
 	DEFINE_PRIM (lime_window_close, 1);
